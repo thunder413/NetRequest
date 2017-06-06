@@ -9,6 +9,7 @@ public class NetRequest {
     public NetRequest(){
         Log.d(LOG_TAG,"OK");
     }
+
     public static void intro(){
         Log.d("NetRequet","Ok its work");
     }
