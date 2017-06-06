@@ -203,7 +203,6 @@ public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.Re
                 } else {
                     if (context instanceof AppCompatActivity) {
                         AppCompatActivity activity = ((AppCompatActivity) context);
-
                     }
                 }
             }

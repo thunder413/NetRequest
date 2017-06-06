@@ -93,7 +93,7 @@ public class NetRequestManager {
         this.debug = debug;
     }
     /**
-     * Tell whether or not a given neRequest has been add to que
+     * Tell whether or not a given neRequest has been add to queue
      * @param key A Hash created from request uri
      * @return State True if the already queued False otherwise
      */

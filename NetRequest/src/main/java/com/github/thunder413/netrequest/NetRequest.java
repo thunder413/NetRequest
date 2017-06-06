@@ -80,6 +80,22 @@ public class NetRequest {
         this.context = context.getApplicationContext();
         tag = String.valueOf(System.currentTimeMillis());
     }
+
+    /**
+     * Set Tag
+     * @param tag Object
+     */
+    public void setTag(Object tag) {
+        this.tag = tag;
+    }
+
+    /**
+     * Get request TAG
+     * @return Current assigned TAG
+     */
+    public Object getTag() {
+        return tag;
+    }
     /**
      * Print a debug message
      * @param message Message to print
@@ -267,11 +283,4 @@ public class NetRequest {
         NetRequestManager.getInstance().cancel(this);
     }
 
-    public void setTag(Object tag) {
-        this.tag = tag;
-    }
-
-    public Object getTag() {
-        return tag;
-    }
 }
