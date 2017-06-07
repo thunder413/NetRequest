@@ -25,7 +25,7 @@ allprojects {
 And then simply add the following line to the `dependencies` section of your `build.gradle` file:
 
 ```groovy
-compile 'com.github.thunder413:NetRequest:version'
+compile 'com.github.thunder413:NetRequest:1.2'
 ```
 
 ## Author
