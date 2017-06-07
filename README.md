@@ -1,74 +1,34 @@
 # NetRequest
 
-NetRequest is an Http request builder library built on top of HttpRequest from kevinsawicki
+NetRequest is a simple HTTPRequest manager that make easy to deal with Json responses
+ 
+### Requirements
 
-## Getting Started
+NetRequest can be included in any Android application.
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+NetRequest supports Android 2.3 (Gingerbread) and later.
 
-### Prerequisites
+### Using NetRequest in your application
 
-What things you need to install the software and how to install them
+First add JitPack dependency line in your project `build.gradle` file
 
-```
-Give examples
-```
+```groovy
+allprojects {
 
-### Installing
-
-A step by step series of examples that tell you have to get a development env running
-
-Say what the step will be
-
-```
-Give the example
+    repositories {
+     
+        maven { url 'https://jitpack.io' }
+    }
+}
 ```
 
-And repeat
+And then simply add the following line to the `dependencies` section of your `build.gradle` file:
 
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
+```groovy
+compile 'com.github.thunder413:NetRequest:version'
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
+## Author
 
 * **Thunder413** - *Initial work* - [Thunder413](https://github.com/thunder413)
 
@@ -80,8 +40,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
+* HTTPRequest from kevinsawicki
+* Gson Google
+
 
 
