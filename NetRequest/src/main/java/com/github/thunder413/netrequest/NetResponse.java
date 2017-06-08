@@ -8,8 +8,8 @@ import com.google.gson.JsonObject;
  *     A wrapper for server response but available only when
  *     server response has been parsed successfully
  * </p>
- * @version 3.0
- * @author Cheikh Semeta
+ * @version 1.2
+ * @author Thunder413
  */
 @SuppressWarnings("all")
 public class NetResponse {

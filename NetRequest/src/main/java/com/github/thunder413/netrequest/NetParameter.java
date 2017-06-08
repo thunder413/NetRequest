@@ -4,8 +4,8 @@ package com.github.thunder413.netrequest;
  *  <p>
  *      Request parameter pair/value holder
  *  </p>
- *  @version 2.3
- *  @author Cheikh Semeta
+ *  @version 1.2
+ *  @author Thunder413
  */
 @SuppressWarnings("all")
 public class NetParameter {

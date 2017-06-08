@@ -3,8 +3,8 @@ package com.github.thunder413.netrequest;
 /**
  * OnNetResponse
  * <p>An interface build to handle NetRequest response events</p>
- * @version 3.0
- * @author Cheikh Semeta
+ * @version 1.2
+ * @author Thunder413
  */
 public interface OnNetResponse {
     /**

@@ -20,7 +20,7 @@ import java.util.Map;
  *          the first one is fired when an error occures before or after network operation task beeing performed
  *          and the last when server response has been retrieved and the response was successfully parsed to Json
  *  </p>
- * @version 1.0
+ * @version 1.2
  * @author Thunder413
  */
 @SuppressWarnings("all")

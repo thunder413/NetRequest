@@ -14,8 +14,8 @@ import java.util.Map;
 /**
  * NetRequestManager
  * <p>Manager for net request </p>
- * @author Cheikh Semeta
- * @version 2.0
+ * @author Thunder413
+ * @version 1.2
  */
 @SuppressWarnings("all")
 public class NetRequestManager {

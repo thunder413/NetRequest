@@ -3,7 +3,12 @@ package com.github.thunder413.netrequest.utils;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-
+/**
+ * NetUtils
+ * <p>Bunch of utilities </p>
+ * @author Thunder413
+ * @version 1.2
+ */
 public class NetUtils {
     /**
      * Generate MD5 hash

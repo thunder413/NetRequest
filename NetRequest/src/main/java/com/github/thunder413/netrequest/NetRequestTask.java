@@ -10,7 +10,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
-
+/**
+ * NetRequestTask
+ * <p>HttpRequest performer </p>
+ * @author Thunder413
+ * @version 1.2
+ */
 @SuppressWarnings("all")
 public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.RequestStatus> {
     /**
