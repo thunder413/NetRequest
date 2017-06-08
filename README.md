@@ -40,7 +40,7 @@ netRequest.setOnResponseListener(new OnNetResponse() {
            // Get response as string
            Log.d("TAG",response.toString());
            // Get response as JsonObject
-            response.toJson();
+            JsonObject data = response.toJson();
          }
 
          @Override
