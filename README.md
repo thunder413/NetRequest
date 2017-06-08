@@ -59,6 +59,35 @@ netRequest.setOnResponseListener(new OnNetResponse() {
  netRequest.load("http://demo.com/json");
 ```
 
+### Handle Errors 
+
+```java
+@Override
+public void onNetResponseError(NetError error) {
+	// Handle error
+    switch (error.getError()) {
+    	case NetError.EMPTY_URI_ERROR:
+        	// No uri is set via setRequestUriMethod or no uri spupplied with load
+        break;
+        case NetError.INVALID_URI_ERROR:
+        	// Supplied uri is not a valid http url
+        break;
+      	case NetError.NULL_URI_ERROR:
+        	// Null uri 
+        break;
+        case NetError.CONNECTION_ERROR:
+        	// No internet connection detected
+        break;
+        case NetError.PARSE_ERROR:
+       		// Fail to parse server response
+        break;  
+      	case NetError.SERVER_ERROR:
+        	// Server error probably no response from the server
+        break;
+    }
+}
+```
+
 
 
 ## Author
