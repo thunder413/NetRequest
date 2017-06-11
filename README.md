@@ -33,12 +33,12 @@ Javadocs are available [here](http://kevinsawicki.github.com/http-request/apidoc
 
 I'm sure that every android developer notice that most of the time when it come to make HTTP request it's about pulling structured data from the server such as `JSON` or `XML` , of course there are other libraries that handle quiet well the same kind of data but they are also shipped with other bunch of parsers that you may not need. In the other hand it's a matter of taste regarding the callbacks and how the request is built which drives me to develop this library
 
-The Library is built on top of [kevinsawicki http-request library](https://github.com/kevinsawicki/http-request) which is a great library for using an [HttpURLConnection](http://download.oracle.com/javase/6/docs/api/java/net/HttpURLConnection.html) and by the way if you areinterested in handling Http request by yourself, I highly recommend you to give it a try
+The Library is built on top of [kevinsawicki http-request library](https://github.com/kevinsawicki/http-request) which is a great library for using an [HttpURLConnection](http://download.oracle.com/javase/6/docs/api/java/net/HttpURLConnection.html) and by the way if you are interested in handling Http request by yourself, I highly recommend you to give it a try
 
 ### How are requests managed?
 
 The `NetRequest` library is queue
-based which mean that requests are stored in a pool and then executed, but you can control the execution mode while in the most case you will need the requests to be run in parallel (which is the default behavior) you can also turn that of and make the pool executor to run requests in sequence using `setParallelRequestEnabled(boolean state)`.
+based which mean that requests are stored in a pool and then executed, but you can control the execution mode while in the most case you will need the requests to be run in parallel (which is the default behavior) you can also turn that off and make the pool executor to run requests in sequence using `setParallelRequestEnabled(boolean state)`.
 
 
 ## How To ?
