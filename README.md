@@ -45,9 +45,9 @@ based which mean that requests are stored in a pool and then executed, but you c
 
 ### Initialize manager
 
-NetRequest has a manager but it auto-manage itself and using it is optional howeverit is useful in some cases, especially when you have repeating treatment, likealways have to send a ``user_id`` every time you perform an http request. It also allow you to control thelibrary behavior like printing debug in development mode or enabling/disabling ``parallel execution`` .
+NetRequest has a manager but it auto-manage itself and using it is optional however it is useful in some cases, especially when you have repeating treatment, like always have to send a ``user_id`` every time you perform an http request. It also allow you to control the library behavior like printing debug in development mode or enabling/disabling ``parallel execution`` .
 
-I recommend you to do it once in ``onCreate``  of your application but you can use it anywhere you would like
+I recommend you to do it once in ``onCreate``  of your application class but you can use it anywhere you would like.
 
 ```java
 NetRequestManager.getInstance()
