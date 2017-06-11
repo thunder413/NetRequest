@@ -40,49 +40,6 @@ The Library is built on top of [kevinsawicki http-request library](https://githu
 The `NetRequest` library is queue
 based which mean that requests are stored in a pool and then executed, but you can control the execution mode while in the most case you will need the requests to be run in parallel (which is the default behavior) you can also turn that of and make the pool executor to run requests in sequence using `setParallelRequestEnabled(boolean state)`.
 
-### Are requests asynchronous?
-
-**No**.  The underlying `HttpUrlConnection` object that each `HttpRequest`
-object wraps has a synchronous API and therefore all methods on `HttpRequest`
-are also synchronous.
-
-Therefore it is important to not use an `HttpRequest` object on the main thread
-of your application.
-
-Here is a simple Android example of using it from an
-[AsyncTask](http://developer.android.com/reference/android/os/AsyncTask.html):
-
-```java
-private class DownloadTask extends AsyncTask<String, Long, File> {
-  protected File doInBackground(String... urls) {
-    try {
-      HttpRequest request =  HttpRequest.get(urls[0]);
-      File file = null;
-      if (request.ok()) {
-        file = File.createTempFile("download", ".tmp");
-        request.receive(file);
-        publishProgress(file.length());
-      }
-      return file;
-    } catch (HttpRequestException exception) {
-      return null;
-    }
-  }
-
-  protected void onProgressUpdate(Long... progress) {
-    Log.d("MyApp", "Downloaded bytes: " + progress[0]);
-  }
-
-  protected void onPostExecute(File file) {
-    if (file != null)
-      Log.d("MyApp", "Downloaded file to: " + file.getAbsolutePath());
-    else
-      Log.d("MyApp", "Download failed");
-  }
-}
-
-new DownloadTask().execute("http://google.com");
-```
 
 ## How To ?
 
