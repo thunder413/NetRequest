@@ -6,72 +6,48 @@ package com.github.thunder413.netrequest;
  *     Define all errors type thrown by
  *     @see NetRequest,NetRequestManager,NetRequestTask
  * </p>
- * @version 1.2
+ * @version 1.3
  * @author Thunder413
  */
-@SuppressWarnings("all")
+@SuppressWarnings("WeakerAccess")
 public class NetError {
-    /**
-     * Thrown when not network connectivity is detected
-     */
-    public static final String CONNECTION_ERROR = "connection_error";
-    /**
-     * Thrown when no uri is submitted
-     */
-    public static final String EMPTY_URI_ERROR = "empty_uri_error";
-    /**
-     * Thrown when attempt to set a null on request uri
-     */
-    public static final String NULL_URI_ERROR = "null_uri_error";
-    /**
-     * Thrown by any exception thrown by
-     * @see android.net.Uri#parse(String)
-     */
-    public static final String INVALID_URI_ERROR = "invalid_uri_error";
-    /**
-     * Thrown when HttpRequest fail for some reason
-     */
-    public static final String  SERVER_ERROR = "server_error";
-    /**
-     * Thrown when fail to parse server response to Json
-     */
-    public static final String  PARSE_ERROR  = "parse_error";
     /**
      * Error type
      */
-    private final String error;
+    private final NetErrorStatus status;
     /**
      * Request tag
      */
     private final Object tag;
     /**
      * Constructor
-     * @param error
+     * @param status ErrorStatus
      * @param tag Error to set
      */
-    public NetError(String error, Object tag) {
-        this.error = error;
+    public NetError(NetErrorStatus status, Object tag) {
+        this.status = status;
         this.tag = tag;
     }
 
     /**
-     * Get registered error
+     * Get registered status
      * @return Error type
      */
-    public String getError(){
-        return error;
+    public NetErrorStatus getStatus(){
+        return status;
     }
-
-    @Override
-    public String toString() {
-        return error;
-    }
-
     /**
      * Get Request tag
-     * @return
+     * @return Object
      */
     public Object getTag() {
         return tag;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(status);
+    }
+
+
 }

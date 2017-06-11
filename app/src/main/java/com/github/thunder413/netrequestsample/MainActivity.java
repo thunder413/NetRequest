@@ -1,6 +1,5 @@
 package com.github.thunder413.netrequestsample;
 
-import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -15,6 +14,11 @@ import com.github.thunder413.netrequest.NetError;
 import com.github.thunder413.netrequest.NetRequest;
 import com.github.thunder413.netrequest.NetResponse;
 import com.github.thunder413.netrequest.OnNetResponse;
+import com.github.thunder413.netrequest.RequestDataType;
+import com.github.thunder413.netrequest.RequestMethod;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,32 +38,54 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         NetRequest netRequest = new NetRequest(this);
+        Map<String,Object> map = new HashMap<>();
+        map.put("id",1);
+        map.put("username","john");
+        map.put("password","*****");
+        netRequest.addParameterSet(map);
         // Set Request method #NetRequest.METHOD_POST | #NetRequest.METHOD_GET (Default)
-        netRequest.setRequestMethod(NetRequest.METHOD_POST);
+        netRequest.setRequestMethod(RequestMethod.POST);
+        netRequest.setRequestDataType(RequestDataType.XML);
         // Bind Listener
         netRequest.setOnResponseListener(new OnNetResponse() {
             @Override
             public void onNetResponseCompleted(NetResponse response) {
                 // Get response as string
                 Log.d("TAG",response.toString());
-                // Get response as JsonObject
-                response.toJson();
             }
 
             @Override
             public void onNetResponseError(NetError error) {
+                Log.d("TAG",error.toString());
                 // Handle error
-                switch (error.getError()) {
-
+                switch (error.getStatus()) {
+                    case CONNECTION_ERROR:
+                        break;
+                    case PARSE_ERROR:
+                        break;
+                    case ERROR:
+                        break;
+                    case INVALID_URI_ERROR:
+                        break;
+                    case SERVER_ERROR:
+                        break;
+                    case NOT_FOUND:
+                        break;
+                    case BAD_GATEWAY:
+                        break;
+                    case REQUEST_ERROR:
+                        break;
+                    case CANCELED:
+                        break;
                 }
             }
         });
         // Set Request
-        netRequest.setRequestUri("http://demo.com/json");
+        netRequest.setRequestUri("http://192.168.1.11/string_radom/xml.php");
         // Trigger request
         netRequest.load();
         // You can also pass the uri directly to load method
-        netRequest.load("http://demo.com/json");
+
 
     }
 

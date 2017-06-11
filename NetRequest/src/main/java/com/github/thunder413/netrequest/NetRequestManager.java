@@ -13,11 +13,16 @@ import java.util.Map;
 
 /**
  * NetRequestManager
- * <p>Manager for net request </p>
+ * <p>This class handles the queue of HTTP requests created. It constructs and executes the various
+ * tasks according to whether or not the parallel execution is activated.
+ *
+ * One a request has been executed it is automatically cleared from queue.
+ * It also allow the cancel of the request before or once the request has been executed
+ * </p>
  * @author Thunder413
- * @version 1.2
+ * @version 1.3
  */
-@SuppressWarnings("all")
+@SuppressWarnings("WeakerAccess")
 public class NetRequestManager {
     /**
      * Log tag
@@ -47,6 +52,10 @@ public class NetRequestManager {
      * Default parameters bind while initialization
      */
     private ArrayList<NetParameter> defaultParameters = new ArrayList<>();
+    /**
+     * Whether or not to perform parllele request
+     */
+    private boolean parrallelRequestEnabled = true;
     /**
      * Private constructor
      */
@@ -79,6 +88,7 @@ public class NetRequestManager {
     public static NetRequestManager getInstance() {
         if(_instance == null) {
             _instance = new NetRequestManager();
+            _instance.setParallelRequestEnabled(true);
         }
         return  _instance;
     }
@@ -89,8 +99,9 @@ public class NetRequestManager {
     public boolean isDebug() {
         return debug;
     }
-    public void setDebug(boolean debug) {
+    public NetRequestManager setDebug(boolean debug) {
         this.debug = debug;
+        return this;
     }
     /**
      * Tell whether or not a given neRequest has been add to queue
@@ -116,11 +127,12 @@ public class NetRequestManager {
      */
     private String getKey(NetRequest netRequest){
         if(netRequest.getRequestUri() != null) {
-            String uri = netRequest.getRequestUri().toString();
+            String uri = netRequest.getRequestUri();
             uri = appendParameters(uri, getParameters());
             uri = appendParameters(uri, netRequest.getParameters());
             return NetUtils.md5(uri);
-        }else {
+        } else {
+            error("getKey >> Uri is null setting default key");
             return NetUtils.md5("default_key");
         }
     }
@@ -150,10 +162,10 @@ public class NetRequestManager {
     private HttpRequest buildRequest(NetRequest netRequest) {
         HttpRequest request;
         // Create url string with default parameters
-        String url = appendParameters(netRequest.getRequestUri().toString(),
+        String url = appendParameters(netRequest.getRequestUri(),
                 getParameters());
 
-        if(netRequest.getMethod().equals(NetRequest.METHOD_POST)) {
+        if(netRequest.getMethod().equals(RequestMethod.POST)) {
             request = HttpRequest.post(url);
         } else {
             // Add parameters
@@ -165,21 +177,35 @@ public class NetRequestManager {
         return request;
     }
     /**
+     * Execute request tast
+     * @param key Request key
+     */
+    private void executeQuery(String key){
+        if(isParallelRequestEnabled()) {
+            AsyncTaskCompat.executeParallel(taskMap.get(key), requestMap.get(key));
+        } else {
+            taskMap.get(key).execute(requestMap.get(key));
+        }
+    }
+
+    /**
      * Add a request parameter
      * @param name Name
      * @param value value
      */
-    public void addParameter(String name, Object value){
+    public NetRequestManager addParameter(String name, Object value){
         defaultParameters.add(new NetParameter(name,value));
+        return this;
     }
     /**
      * Add a hash map as parameters
      * @param map DataMap
      */
-    public void addParameterSet(Map<String,Object> map){
+    public NetRequestManager addParameterSet(Map<String,Object> map){
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             addParameter(entry.getKey(), entry.getValue());
         }
+        return this;
     }
     /**
      * Get parameters
@@ -195,6 +221,23 @@ public class NetRequestManager {
         }
         return params;
     }
+
+    /**
+     * Enable / Disable ParrallelRequest
+     * @param enabled State
+     */
+    public NetRequestManager setParallelRequestEnabled(boolean enabled){
+        parrallelRequestEnabled = enabled;
+        return this;
+    }
+
+    /**
+     * Tell whether or not parallel requesting is enabled
+     * @return Parallel request state
+     */
+    public boolean isParallelRequestEnabled(){
+        return parrallelRequestEnabled;
+    }
     /**
      * Add a net request to a queue
      * @param netRequest Net request
@@ -206,7 +249,7 @@ public class NetRequestManager {
             if(!isRunning(key)) {
                 requestMap.put(key, buildRequest(netRequest));
                 taskMap.put(key, new NetRequestTask(netRequest));
-                AsyncTaskCompat.executeParallel(taskMap.get(key), requestMap.get(key));
+                executeQuery(key);
             } else {
                 debug("AddToQueue >> Already running >> ("+netRequest.getRequestUri()+")");
             }
@@ -214,6 +257,8 @@ public class NetRequestManager {
             debug("AddToQueue >> Already queued and probably running shortly ");
         }
     }
+
+
     /**
      * Cancel a netRequest
      * @param netRequest NetRequest

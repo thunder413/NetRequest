@@ -12,44 +12,47 @@ import java.util.Map;
  *  <p>
  *      Build on top of HttpRequest lib that use NetConnection
  *      This class allow basic network operation such as performing a GET or POST request
- *          @see NetRequest#METHOD_GET,NetRequest#METHOD_POST
+ *          @see RequestMethod#GET,RequestMethod#POST
  *      You can keep track of the ongoing operation by attaching a listener
  *          @see OnNetResponse
  *          witch has two callback
- *          @see OnNetResponse#onNetResponseError(NetError),OnNetResponse#onNetResponseCompleted(NetResponse)
+ *          @see OnNetResponse#onNetResponseError(NetError),
+ *          @see OnNetResponse#onNetResponseCompleted(NetResponse)
  *          the first one is fired when an error occures before or after network operation task beeing performed
  *          and the last when server response has been retrieved and the response was successfully parsed to Json
  *  </p>
- * @version 1.2
- * @author Thunder413
+ *
+ * @author thunder413
+ * @version 1.3
  */
-@SuppressWarnings("all")
+@SuppressWarnings("WeakerAccess")
 public class NetRequest {
     /**
      * LOG TAG
      */
     private static final String LOG_TAG = "NetRequest";
     /**
-     * Method GET
-     */
-    public static final String METHOD_GET = "GET";
-    /**
-     * Method POST
-     */
-    public static final String METHOD_POST = "POST";
-    /**
      * NetRequest context
      */
     private final Context context;
     /**
-     * Current method
-     * @default #METHOD_GET
+     * Application context
      */
-    private String method = METHOD_GET;
+    private final Context applicationContext;
+    /**
+     * Current method
+     * default #METHOD_GET
+     */
+    private RequestMethod method = RequestMethod.GET;
+    /**
+     * Current requestDataType
+     * @see RequestDataType
+     */
+    private RequestDataType requestDataType = RequestDataType.TEXT;
     /**
      * NetRequest uri
      */
-    private Uri uri;
+    private String uri;
     /**
      * NetRequest data
      * @see NetParameter
@@ -71,30 +74,34 @@ public class NetRequest {
     /**
      * Whether or not to cancel app when context is diying
      */
-    private boolean canceOnContextDie;
+    private boolean cancelOnContextDie;
     /**
      * Constructor
      * @param context Context
      */
     public NetRequest(Context context){
-        this.context = context.getApplicationContext();
+        this.context = context;
+        applicationContext = context.getApplicationContext();
+        // SetDefault RequestDataType
+        setRequestDataType(RequestDataType.TEXT);
+        // SetDefaultMethod
+        setRequestMethod(RequestMethod.GET);
+        // SetCancel on die context
+        setCancelOnContextDie(true);
+        // Generate default tag
         tag = String.valueOf(System.currentTimeMillis());
     }
-
     /**
-     * Set Tag
-     * @param tag Object
+     * Get active network
+     * @return NetworkInfo Object
      */
-    public void setTag(Object tag) {
-        this.tag = tag;
-    }
-
-    /**
-     * Get request TAG
-     * @return Current assigned TAG
-     */
-    public Object getTag() {
-        return tag;
+    private boolean isNetworkActive() {
+        if(applicationContext != null) {
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            return cm.getActiveNetworkInfo() != null;
+        } else {
+            return false;
+        }
     }
     /**
      * Print a debug message
@@ -118,70 +125,122 @@ public class NetRequest {
         Log.e(LOG_TAG,message);
     }
     /**
+     * Dispatch an error to response listener
+     * @param error Error type
+     */
+    private void dispatchError(NetErrorStatus error) {
+        hasError = true;
+        if(listener != null) {
+            listener.onNetResponseError(new NetError(error, tag));
+        }
+    }
+    /**
      * Get context
      * @return Context
      */
     public Context getContext(){
         return this.context;
     }
+
     /**
-     *Dispatch an error to response lsietner
-     * @param error Error type
+     * Set Tag
+     * @param tag Object
      */
-    private void dispatchError(String error) {
-        hasError = true;
-        if(listener != null) {
-            listener.onNetResponseError(new NetError(NetError.SERVER_ERROR, error));
-        }
+    public void setTag(Object tag) {
+        this.tag = tag;
     }
+
     /**
-     * Get / Set request method
+     * Get request TAG
+     * @return Current assigned TAG
+     */
+    public Object getTag() {
+        return tag;
+    }
+
+    /**
+     * Get request method
      * @return Method
      */
-    public String getMethod() { return this.method; }
-    public void setRequestMethod(String method){
-        this.method = (method == null || method.isEmpty()) ? METHOD_GET:method;
-    }
+    public RequestMethod getMethod() { return this.method; }
+
     /**
-     * Get / Set uri
-     * @return Uri
+     * Set request method
+     * @param method Method
      */
-    public Uri getRequestUri(){ return this.uri; }
-    public void setRequestUri(Uri uri)  {
-        this.uri = uri;
+    public void setRequestMethod(RequestMethod method){
+        this.method = (method == null) ? RequestMethod.GET:method;
     }
+
+    /**
+     * Set RequestDataType
+     * @param requestDataType RequestDataType
+     */
+    public void setRequestDataType(RequestDataType requestDataType){
+        this.requestDataType = requestDataType;
+    }
+
+    /**
+     * Get requestDataType
+     * @return Current RequestDataType
+     */
+    public RequestDataType getRequestDataType(){
+        return requestDataType;
+    }
+
     /**
      * Set uri
      * @param uri Uri string
      */
     public void setRequestUri(String uri) {
-        if(uri == null) {
-            dispatchError(NetError.NULL_URI_ERROR);
-            return;
-        } else if(uri.isEmpty()){
-            dispatchError(NetError.EMPTY_URI_ERROR);
-            return;
-        }
-        final Uri parsedUri = Uri.parse(uri);
-        setRequestUri(parsedUri);
-        /*
-        if(URLUtil.isNetworkUrl(uri)) {
-
-        } else {
-            error("SetRequest :: Submitted uri is not valid >> "+uri);
-            dispatchError(NetError.INVALID_URI_ERROR);
-        }*/
+        this.uri = uri;
     }
 
     /**
-     * Get / Set
-     * @return Whether or not to cancel when context is diying
+     * Get request uri
+     * @return Uri
      */
-    public boolean isCanceOnContextDie(){
-        return canceOnContextDie;
+    public String getRequestUri(){
+        return uri;
     }
+    /**
+     * Load uri
+     * @param uri Url string
+     */
+    public void load(String uri)  {
+        setRequestUri(uri);
+        load();
+    }
+    /**
+     * Load the default uri
+     */
+    public void load() {
+        if(hasError) return;
+        if (uri == null || uri.isEmpty()) {
+            dispatchError(NetErrorStatus.INVALID_URI_ERROR);
+            return;
+        }
+        if(!isNetworkActive()) {
+            dispatchError(NetErrorStatus.CONNECTION_ERROR);
+            return;
+        }
+        debug("Loading uri >> "+uri);
+        NetRequestManager.getInstance().addToQueue(this);
+    }
+    /**
+     * Set
+     * @return Whether or not to cancel when context is dieing
+     */
+    public boolean isCancelOnContextDie(){
+        return cancelOnContextDie;
+    }
+
+    /**
+     * Get cancel on context die state
+     * @param cancelOnContextDie State
+     */
     public void setCancelOnContextDie(boolean cancelOnContextDie){
-        this.canceOnContextDie = cancelOnContextDie;
+        this.cancelOnContextDie = cancelOnContextDie;
     }
     /**
      * Add a request parameter
@@ -215,72 +274,28 @@ public class NetRequest {
         return params;
     }
     /**
-     * Get / Set response listener
-     * @return Current binded listener
+     * Get response listener
+     * @return OnNetResponseListener
      */
     public OnNetResponse getResponseListener(){
         return listener;
     }
+
+    /**
+     * Set response listener
+     * @param listener OnNetResponse
+     */
     public void setOnResponseListener(OnNetResponse listener){
         this.listener = listener;
     }
+
     /**
-     * Get active network
-     * @return NetworkInfo Object
-     */
-    private boolean isNetworkActive() {
-        if(context != null) {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            return cm.getActiveNetworkInfo() != null;
-        } else {
-            return false;
-        }
-    }
-    /**
-     * Load Uri
-     * @param uri Uri object
-     */
-    public void load(Uri uri)  {
-        setRequestUri(uri);
-        load();
-    }
-    /**
-     * Load uri
-     * @param uri Url string
-     */
-    public void load(String uri)  {
-        if(hasError) return;
-        if(uri == null) {
-            dispatchError(NetError.NULL_URI_ERROR);
-            return;
-        } else if(uri.isEmpty()){
-            dispatchError(NetError.EMPTY_URI_ERROR);
-            return;
-        }
-        setRequestUri(uri);
-        load(this.uri);
-    }
-    /**
-     * Load the default uri
-     */
-    public void load() {
-        if(hasError) return;
-        if (uri == null) {
-            dispatchError(NetError.NULL_URI_ERROR);
-            return;
-        }
-        if(!isNetworkActive()) {
-            dispatchError(NetError.CONNECTION_ERROR);
-            return;
-        }
-        debug("Loading uri >> "+uri);
-        NetRequestManager.getInstance().addToQueue(this);
-    }
-    /**
-     * Cancel
+     * By default whenever the context die the request will be cancelled
+     * @see NetRequest#setCancelOnContextDie(boolean)
+     * if the request is already runing your onResponseListener wont be triggered
+     * but you can also cancel the request manualy using this method
      */
     public void cancel(){
         NetRequestManager.getInstance().cancel(this);
     }
-
 }

@@ -10,14 +10,27 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+import java.io.StringReader;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 /**
  * NetRequestTask
- * <p>HttpRequest performer </p>
- * @author Thunder413
- * @version 1.2
+ *
+ * <p>Executes the HTTP request passed as argument and sends the result to the listener
+ * according to result status if RequestStatus#SUCCESS it will trigger the
+ * {OnNetResponse#onResponseCompleted} method  otherwise {OnNetResponse#onResponseError}
+ * </p>
+ *
+ * @author thunder413
+ * @version 1.3
  */
-@SuppressWarnings("all")
-public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.RequestStatus> {
+@SuppressWarnings("WeakerAccess")
+public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetErrorStatus> {
     /**
      * Log tag
      */
@@ -39,21 +52,18 @@ public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.Re
      */
     private JsonObject responseJson;
     /**
+     * Server response XML
+     */
+    private Document responseXML;
+    /**
      * Task status
      */
-    private RequestStatus status = RequestStatus.CANCELLED;
+    private NetErrorStatus status = NetErrorStatus.ERROR;
     /**
      * NetRequest
      */
     private final NetRequest netRequest;
-    /**
-     * Status
-     */
-    public enum RequestStatus {
-        SUCCESS,
-        ERROR,
-        CANCELLED
-    }
+
 
     /**
      * Constructor
@@ -105,51 +115,95 @@ public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.Re
                 e.printStackTrace();
             }
         }
-        status = RequestStatus.CANCELLED;
+        status = NetErrorStatus.CANCELED;
     }
 
+    /**
+     * Parse content to json
+     * @param content Content
+     * @return JsonObject
+     */
+    private JsonObject getAsJson(String content){
+        try {
+            return new JsonParser().parse(content).getAsJsonObject();
+        } catch (JsonParseException e){
+            if (NetRequestManager.getInstance().isDebug()) {
+                // Debug
+                error("DoInBackground >> Server response parse error");
+                e.printStackTrace();
+            }
+
+        }
+        return null;
+    }
 
     /**
-     * Override this method to perform a computation on a background thread. The
-     * specified parameters are the parameters passed to {@link #execute}
-     * by the caller of this task.
-     * <p>
-     * This method can call {@link #publishProgress} to publish updates
-     * on the UI thread.
+     * Parse content to XML Document
+     * @param content Content
+     * @return Document
+     */
+    private Document getAsXML(String content){
+        Document doc;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        try {
+            builder = factory.newDocumentBuilder();
+            doc = builder.parse( new InputSource( new StringReader( content ) ) );
+            return doc;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+    /**
+     * Perform a computation on a background thread.
      *
-     * @param params The parameters of the task.
-     * @return A result, defined by the subclass of this task.
-     * @see #onPreExecute()
-     * @see #onPostExecute
-     * @see #publishProgress
+     * @param params HttpRequest.
+     * @return Status.
      */
     @Override
-    protected RequestStatus doInBackground(HttpRequest... params) {
+    protected NetErrorStatus doInBackground(HttpRequest... params) {
         request = params[0];
         if(!canGoFurther()) {
             // Cancel
-            debug("Can go further due to task cancel");
+            debug("DoInBackground >> Can go further due to task cancel");
             NetRequestManager.getInstance().removeFromQueue(netRequest);
-            return RequestStatus.CANCELLED;
+            return NetErrorStatus.CANCELED;
         }
         try {
-            debug("Performing request on url");
-            if(netRequest.getMethod() == NetRequest.METHOD_POST){
+            debug("DoInBackground >> Performing request on url");
+            if(netRequest.getMethod() == RequestMethod.POST){
                 request.send(netRequest.getParameters());
             }
             responseText = request.body();
-            // Debug
-            debug("ServerResponse >> "+responseText);
-            try {
-                responseJson = new JsonParser().parse(responseText).getAsJsonObject();
-                status = RequestStatus.SUCCESS;
-            } catch (JsonParseException e){
-                if (NetRequestManager.getInstance().isDebug()) {
-                    // Debug
-                    error("DoInBackground >> Server response parse error");
-                    e.printStackTrace();
+            if(request.ok()) {
+                // Debug
+                debug("DoInBackground >> Response >> " + responseText + " ResponseStatus >> " + request.code());
+                RequestDataType requestDataType = netRequest.getRequestDataType();
+                if (requestDataType.equals(RequestDataType.JSON)) {
+                    responseJson = getAsJson(responseText);
+                    if (responseJson == null) {
+                        status = NetErrorStatus.PARSE_ERROR;
+                    } else {
+                        status = NetErrorStatus.SUCCESS;
+                    }
+                } else if (requestDataType.equals(RequestDataType.XML)) {
+                    responseXML = getAsXML(responseText);
+                    if (responseXML == null) {
+                        status = NetErrorStatus.PARSE_ERROR;
+                    } else {
+                        status = NetErrorStatus.SUCCESS;
+                    }
+                } else {
+                    status = NetErrorStatus.SUCCESS;
                 }
-                status = RequestStatus.ERROR;
+            } else if(request.code() == 404) {
+                status = NetErrorStatus.NOT_FOUND;
+            } else if(request.code() == 502) {
+                status = NetErrorStatus.BAD_GATEWAY;
+            }  else  {
+                status = NetErrorStatus.SERVER_ERROR;
             }
         } catch (Exception e){
             if (NetRequestManager.getInstance().isDebug()) {
@@ -157,34 +211,44 @@ public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.Re
                 error("DoInBackground >> HttpRequest error");
                 e.printStackTrace();
             }
-            status = RequestStatus.ERROR;
+            status = NetErrorStatus.REQUEST_ERROR;
         }
         return status;
     }
 
     @Override
-    protected void onPostExecute(RequestStatus status) {
+    protected void onPostExecute(NetErrorStatus status) {
         super.onPostExecute(status);
+        debug("OnPostExecute >> Status : "+status);
+        this.status = status;
         if(!canGoFurther()) {
             // Cancel
-            debug("Can go further due to task cancel");
+            debug("OnPostExecute >> Can go further due to task cancel");
             NetRequestManager.getInstance().removeFromQueue(netRequest);
             return;
         }
         // Get listener
-        OnNetResponse listener = netRequest.getResponseListener();
-
-        if (status == RequestStatus.SUCCESS){
+        OnNetResponse listener          = netRequest.getResponseListener();
+        RequestDataType requestDataType = netRequest.getRequestDataType();
+        Object tag                      = netRequest.getTag();
+        if (status == NetErrorStatus.SUCCESS){
             if(listener != null) {
                 // Debug
-                debug("OnPostExecute : Status >> Success >> Triggering listener");
-                listener.onNetResponseCompleted(new NetResponse(responseText,responseJson,netRequest.getTag()));
+                debug("OnPostExecute >> Status : Success >> Triggering listener");
+                Object data = null;
+                if(requestDataType.equals(RequestDataType.JSON)) {
+                    data = responseJson;
+                } else if(requestDataType.equals(RequestDataType.XML)){
+                    data = responseXML;
+                }
+                NetResponse netResponse = new NetResponse(responseText,tag, requestDataType,data);
+                listener.onNetResponseCompleted(netResponse);
             }
         } else {
             if(listener != null) {
                 // Debug
-                debug("OnPostExecute : Status >> Error >> Triggering listener");
-                listener.onNetResponseError(new NetError(NetError.SERVER_ERROR,netRequest.getTag()));
+                debug("OnPostExecute >> Status : Error >> Triggering listener");
+                listener.onNetResponseError(new NetError(status,tag));
             }
         }
         NetRequestManager.getInstance().removeFromQueue(netRequest);
@@ -202,12 +266,13 @@ public class NetRequestTask extends AsyncTask<HttpRequest,Void,NetRequestTask.Re
         if(isCancelled()) {
             go = false;
         } else {
-            if(netRequest.isCanceOnContextDie()) {
+            if(netRequest.isCancelOnContextDie()) {
                 if (context == null) {
                     go = false;
                 } else {
                     if (context instanceof AppCompatActivity) {
                         AppCompatActivity activity = ((AppCompatActivity) context);
+                        go = !activity.isFinishing();
                     }
                 }
             }
