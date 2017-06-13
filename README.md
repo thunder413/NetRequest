@@ -25,7 +25,7 @@ And then simply add the following line to the `dependencies` section of your app
 compile 'com.github.thunder413:NetRequest:1.3'
 ```
 
-Javadocs are available [here](http://kevinsawicki.github.com/http-request/apidocs/index.html).
+Javadocs are available [here](http://https://github.com/thunder413/NetRequest/apidocs/index.html).
 
 ## FAQ
 
