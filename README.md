@@ -199,6 +199,31 @@ netRequest.load("http://google.com");
 netRequest.cancel()
 ```
 
+### Request TAG
+
+``NetRequest`` allow you to use tags, this is usefull when in one activity or fragment you have to make multiple request you can re-use the ``OnResponseListener`` 
+
+```java
+...
+// Tag can be any data type you would like (Integer,String,Object ....)
+netRequest.setTag(tag);
+netRequest.setOnResponseListener(new OnNetResponse() {  
+  @Override  
+  public void onNetResponseCompleted(NetResponse response) {
+    Log.d("TAG",response.toString()); 
+    // Deal with tag
+    Object tag = response.getTag();
+  }   
+  @Override  
+  public void onNetResponseError(NetError error) {    
+    Log.d("TAG",error.toString());
+    // Deal with tag
+    Object tag = error.getTag();
+  }
+});
+netRequest.load("http://google.com");
+```
+
 
 
 ## Author
