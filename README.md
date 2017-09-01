@@ -22,7 +22,7 @@ allprojects {
 And then simply add the following line to the `dependencies` section of your app module `build.gradle` file:
 
 ```groovy
-compile 'com.github.thunder413:NetRequest:1.3'
+compile 'com.github.thunder413:NetRequest:1.4'
 ```
 
 Javadocs are available [here](http://https://github.com/thunder413/NetRequest/apidocs/index.html).
